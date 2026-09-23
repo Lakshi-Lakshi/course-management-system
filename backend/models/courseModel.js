@@ -4,6 +4,7 @@ const Course = {
 
   // Get all courses
   async getAll() {
+
     const [rows] = await db.execute(
       "SELECT * FROM courses"
     );
@@ -14,12 +15,48 @@ const Course = {
 
   // Get one course
   async getById(id) {
+
     const [rows] = await db.execute(
       "SELECT * FROM courses WHERE id = ?",
       [id]
     );
 
     return rows[0];
+  },
+
+
+  // Check whether a course title already exists
+  async existsByTitle(title, excludeId = null) {
+
+    let query = `
+      SELECT id
+      FROM courses
+      WHERE LOWER(TRIM(title)) = LOWER(TRIM(?))
+    `;
+
+    let params = [title];
+
+
+    // Used during update so the current course
+    // does not conflict with itself
+    if (excludeId !== null) {
+
+      query += " AND id != ?";
+
+      params.push(excludeId);
+    }
+
+
+    query += " LIMIT 1";
+
+
+    const [rows] = await db.execute(
+      query,
+      params
+    );
+
+
+    return rows.length > 0;
   },
 
 
@@ -36,6 +73,7 @@ const Course = {
       description,
     } = course;
 
+
     const [result] = await db.execute(
       `INSERT INTO courses
        (title, category, level, duration, price, image, description)
@@ -50,6 +88,7 @@ const Course = {
         description,
       ]
     );
+
 
     return result.insertId;
   },
@@ -67,6 +106,7 @@ const Course = {
       image,
       description,
     } = course;
+
 
     const [result] = await db.execute(
       `UPDATE courses
@@ -90,6 +130,7 @@ const Course = {
       ]
     );
 
+
     return result;
   },
 
@@ -102,9 +143,11 @@ const Course = {
       [id]
     );
 
+
     return result;
   },
 
 };
+
 
 module.exports = Course;
