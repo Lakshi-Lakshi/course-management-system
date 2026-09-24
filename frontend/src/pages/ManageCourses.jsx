@@ -24,18 +24,12 @@ const EMPTY_COURSE = {
   description: "",
 };
 
-const LEVEL_OPTIONS = [
-  "Beginner",
-  "Intermediate",
-  "Advanced",
-];
+const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced"];
 
 
-// Load the course list
+// Load the course list.
 async function fetchAllCourses() {
-
-  const response =
-    await api.get("/courses");
+  const response = await api.get("/courses");
 
   return response.data.courses;
 }
@@ -43,55 +37,35 @@ async function fetchAllCourses() {
 
 function ManageCourses() {
 
-  const [courses, setCourses] =
-    useState([]);
+  const [courses, setCourses] = useState([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const [error, setError] =
-    useState("");
+  // Form visibility + which course is being edited
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
-  const [success, setSuccess] =
-    useState("");
+  const [formData, setFormData] = useState(EMPTY_COURSE);
 
+  // General form error
+  const [formError, setFormError] = useState("");
 
-  // Form visibility + editing course
-  const [showForm, setShowForm] =
-    useState(false);
+  // Field-level server validation errors
+  const [fieldErrors, setFieldErrors] = useState({});
 
-  const [editingId, setEditingId] =
-    useState(null);
-
-
-  const [formData, setFormData] =
-    useState(EMPTY_COURSE);
+  const [saving, setSaving] = useState(false);
 
 
-  const [formError, setFormError] =
-    useState("");
-
-
-  // Server-side field errors
-  const [fieldErrors, setFieldErrors] =
-    useState({});
-
-
-  const [saving, setSaving] =
-    useState(false);
-
-
-  // ---------- Load courses ----------
-
+  // ---------- Load the course list once, when the page opens ----------
   useEffect(() => {
 
     const loadCourses = async () => {
 
       try {
 
-        setCourses(
-          await fetchAllCourses()
-        );
+        setCourses(await fetchAllCourses());
 
       } catch (error) {
 
@@ -107,55 +81,36 @@ function ManageCourses() {
       }
     };
 
-
     loadCourses();
 
   }, []);
 
 
-  // ---------- Refresh courses ----------
-
+  // ---------- Reload the list after create / update / delete ----------
   const refreshCourses = async () => {
-
-    setCourses(
-      await fetchAllCourses()
-    );
-
+    setCourses(await fetchAllCourses());
   };
 
 
-  // ---------- Form change ----------
+  // ---------- Form helpers ----------
 
   const handleChange = (event) => {
 
-    const {
-      name,
-      value
-    } = event.target;
-
+    const { name, value } = event.target;
 
     setFormData({
-
       ...formData,
-
       [name]: value,
-
     });
 
-
-    // Clear that field's server error
-    // when the user changes the value
+    // Remove the server error for the field
+    // when the user starts correcting it.
     setFieldErrors((previous) => ({
-
       ...previous,
-
       [name]: "",
-
     }));
 
-
     setFormError("");
-
   };
 
 
@@ -164,21 +119,16 @@ function ManageCourses() {
   const openAddForm = () => {
 
     setShowForm(true);
-
     setEditingId(null);
 
     setFormData({
-      ...EMPTY_COURSE
+      ...EMPTY_COURSE,
     });
 
     setFormError("");
-
     setFieldErrors({});
-
     setError("");
-
     setSuccess("");
-
   };
 
 
@@ -187,44 +137,23 @@ function ManageCourses() {
   const openEditForm = (course) => {
 
     setShowForm(true);
-
     setEditingId(course.id);
 
-
+    // Fill the form with existing course values.
     setFormData({
-
-      title:
-        course.title || "",
-
-      category:
-        course.category || "",
-
-      level:
-        course.level || "Beginner",
-
-      duration:
-        course.duration || "",
-
-      price:
-        String(course.price ?? ""),
-
-      image:
-        course.image || "",
-
-      description:
-        course.description || "",
-
+      title: course.title || "",
+      category: course.category || "",
+      level: course.level || "Beginner",
+      duration: course.duration || "",
+      price: String(course.price ?? ""),
+      image: course.image || "",
+      description: course.description || "",
     });
 
-
     setFormError("");
-
     setFieldErrors({});
-
     setError("");
-
     setSuccess("");
-
   };
 
 
@@ -233,39 +162,33 @@ function ManageCourses() {
   const closeForm = () => {
 
     setShowForm(false);
-
     setEditingId(null);
 
     setFormData({
-      ...EMPTY_COURSE
+      ...EMPTY_COURSE,
     });
 
     setFormError("");
-
     setFieldErrors({});
-
   };
 
 
-  // ========================================
-  // Create / Update
-  // ========================================
+  // ---------- Create / Update ----------
 
   const handleSubmit = async (event) => {
 
+    // Stop browser from reloading the page.
     event.preventDefault();
 
-
     setFormError("");
-
+    setError("");
+    setSuccess("");
     setFieldErrors({});
 
-    setError("");
 
-    setSuccess("");
-
-
-    // ---------- Client-side basic validation ----------
+    // ---------- Client-side validation ----------
+    // This is only an additional user-friendly check.
+    // Backend validation remains the final protection.
 
     if (
       !formData.title.trim() ||
@@ -304,30 +227,22 @@ function ManageCourses() {
     }
 
 
-    // Backend payload
+    // The backend expects price to be a number.
     const coursePayload = {
 
-      title:
-        formData.title.trim(),
+      title: formData.title.trim(),
 
-      category:
-        formData.category.trim(),
+      category: formData.category.trim(),
 
-      level:
-        formData.level,
+      level: formData.level,
 
-      duration:
-        formData.duration.trim(),
+      duration: formData.duration.trim(),
 
-      price:
-        Number(formData.price),
+      price: Number(formData.price),
 
-      image:
-        formData.image.trim(),
+      image: formData.image.trim(),
 
-      description:
-        formData.description.trim(),
-
+      description: formData.description.trim(),
     };
 
 
@@ -336,126 +251,109 @@ function ManageCourses() {
 
     try {
 
-      // ---------- Update ----------
-
       if (editingId) {
 
-        const response =
-          await api.put(
-            `/courses/${editingId}`,
-            coursePayload
-          );
+        // ---------- Update existing course ----------
 
+        const response = await api.put(
+          `/courses/${editingId}`,
+          coursePayload
+        );
 
         setSuccess(
           response.data.message
-        );
-
-      }
-
-      // ---------- Create ----------
-
-      else {
-
-        const response =
-          await api.post(
-            "/courses",
-            coursePayload
-          );
-
-
-        setSuccess(
-          response.data.message
-        );
-
-      }
-
-
-      // Close form only after successful save
-      closeForm();
-
-
-      // Refresh data
-      await refreshCourses();
-
-
-    } catch (error) {
-
-      // ----------------------------------------
-      // Server-side validation errors
-      // ----------------------------------------
-
-      const serverErrors =
-        error.response?.data?.errors;
-
-
-      if (serverErrors) {
-
-        // Show each backend error
-        // under the related field
-        setFieldErrors(serverErrors);
-
-        setFormError(
-          "Please correct the errors below."
         );
 
       } else {
 
-        setFormError(
-          error.response?.data?.message ||
-          "Could not save the course. Please try again."
+        // ---------- Create new course ----------
+
+        const response = await api.post(
+          "/courses",
+          coursePayload
         );
 
+        setSuccess(
+          response.data.message
+        );
       }
+
+
+      // Close form after successful save.
+      closeForm();
+
+      // Show fresh data from backend.
+      await refreshCourses();
+
+    } catch (error) {
+
+      // ---------- SERVER-SIDE VALIDATION ERROR ----------
+
+      const responseData =
+        error.response?.data;
+
+
+      // Backend field-level errors.
+      //
+      // Example:
+      // {
+      //   errors: {
+      //     title: "Course title already exists.",
+      //     price: "Price must be greater than or equal to 0."
+      //   }
+      // }
+
+      if (responseData?.errors) {
+
+        setFieldErrors(
+          responseData.errors
+        );
+      }
+
+
+      // General backend error message.
+      setFormError(
+        responseData?.message ||
+        "Could not save the course. Please try again."
+      );
 
     } finally {
 
       setSaving(false);
-
     }
-
   };
 
 
-  // ========================================
-  // Delete
-  // ========================================
+  // ---------- Delete ----------
 
   const handleDelete = async (course) => {
 
-    const confirmed =
-      window.confirm(
-        `Delete "${course.title}"? This cannot be undone.`
-      );
+    // Always confirm before destructive action.
+    const confirmed = window.confirm(
+      `Delete "${course.title}"? This cannot be undone.`
+    );
 
 
     if (!confirmed) {
-
       return;
-
     }
 
 
     setError("");
-
     setSuccess("");
 
 
     try {
 
-      const response =
-        await api.delete(
-          `/courses/${course.id}`
-        );
-
+      const response = await api.delete(
+        `/courses/${course.id}`
+      );
 
       setSuccess(
         response.data.message
       );
 
-
       await refreshCourses();
-
 
     } catch (error) {
 
@@ -463,9 +361,7 @@ function ManageCourses() {
         error.response?.data?.message ||
         "Could not delete the course."
       );
-
     }
-
   };
 
 
@@ -479,9 +375,7 @@ function ManageCourses() {
       <div className="container">
 
 
-        {/* =====================================
-            PAGE HEADER
-        ====================================== */}
+        {/* ---------- Page Header ---------- */}
 
         <div className="page-header">
 
@@ -491,12 +385,9 @@ function ManageCourses() {
               Manage Courses
             </h1>
 
-
             <p className="page-subtitle">
-
               Add new courses, update the existing ones,
               or remove courses that are no longer offered.
-
             </p>
 
           </div>
@@ -517,7 +408,6 @@ function ManageCourses() {
               : <FaPlus />
             }
 
-
             {showForm
               ? "Cancel"
               : "Add Course"
@@ -528,16 +418,13 @@ function ManageCourses() {
         </div>
 
 
-        {/* =====================================
-            SUCCESS / ERROR
-        ====================================== */}
+        {/* ---------- Success / General Error Messages ---------- */}
 
         {success && (
           <p className="success">
             {success}
           </p>
         )}
-
 
         {error && (
           <p className="error">
@@ -546,9 +433,7 @@ function ManageCourses() {
         )}
 
 
-        {/* =====================================
-            ADD / EDIT FORM
-        ====================================== */}
+        {/* ---------- Add / Edit Form ---------- */}
 
         {showForm && (
 
@@ -558,10 +443,9 @@ function ManageCourses() {
             <div className="section-card-header">
 
               <h2>
-                {
-                  editingId
-                    ? "Edit Course"
-                    : "New Course"
+                {editingId
+                  ? "Edit Course"
+                  : "New Course"
                 }
               </h2>
 
@@ -588,7 +472,11 @@ function ManageCourses() {
 
                   <input
                     id="title"
-                    className="input"
+                    className={
+                      fieldErrors.title
+                        ? "input input-error"
+                        : "input"
+                    }
                     type="text"
                     name="title"
                     value={formData.title}
@@ -599,7 +487,7 @@ function ManageCourses() {
 
                   {fieldErrors.title && (
 
-                    <p className="error">
+                    <p className="field-error">
                       {fieldErrors.title}
                     </p>
 
@@ -617,7 +505,11 @@ function ManageCourses() {
 
                   <input
                     id="category"
-                    className="input"
+                    className={
+                      fieldErrors.category
+                        ? "input input-error"
+                        : "input"
+                    }
                     type="text"
                     name="category"
                     value={formData.category}
@@ -628,7 +520,7 @@ function ManageCourses() {
 
                   {fieldErrors.category && (
 
-                    <p className="error">
+                    <p className="field-error">
                       {fieldErrors.category}
                     </p>
 
@@ -653,7 +545,11 @@ function ManageCourses() {
 
                   <select
                     id="level"
-                    className="input"
+                    className={
+                      fieldErrors.level
+                        ? "input input-error"
+                        : "input"
+                    }
                     name="level"
                     value={formData.level}
                     onChange={handleChange}
@@ -677,7 +573,7 @@ function ManageCourses() {
 
                   {fieldErrors.level && (
 
-                    <p className="error">
+                    <p className="field-error">
                       {fieldErrors.level}
                     </p>
 
@@ -695,7 +591,11 @@ function ManageCourses() {
 
                   <input
                     id="duration"
-                    className="input"
+                    className={
+                      fieldErrors.duration
+                        ? "input input-error"
+                        : "input"
+                    }
                     type="text"
                     name="duration"
                     value={formData.duration}
@@ -706,7 +606,7 @@ function ManageCourses() {
 
                   {fieldErrors.duration && (
 
-                    <p className="error">
+                    <p className="field-error">
                       {fieldErrors.duration}
                     </p>
 
@@ -724,7 +624,11 @@ function ManageCourses() {
 
                   <input
                     id="price"
-                    className="input"
+                    className={
+                      fieldErrors.price
+                        ? "input input-error"
+                        : "input"
+                    }
                     type="number"
                     min="0"
                     step="0.01"
@@ -737,7 +641,7 @@ function ManageCourses() {
 
                   {fieldErrors.price && (
 
-                    <p className="error">
+                    <p className="field-error">
                       {fieldErrors.price}
                     </p>
 
@@ -759,7 +663,11 @@ function ManageCourses() {
 
                 <input
                   id="image"
-                  className="input"
+                  className={
+                    fieldErrors.image
+                      ? "input input-error"
+                      : "input"
+                  }
                   type="text"
                   name="image"
                   value={formData.image}
@@ -770,7 +678,7 @@ function ManageCourses() {
 
                 {fieldErrors.image && (
 
-                  <p className="error">
+                  <p className="field-error">
                     {fieldErrors.image}
                   </p>
 
@@ -790,7 +698,11 @@ function ManageCourses() {
 
                 <textarea
                   id="description"
-                  className="input"
+                  className={
+                    fieldErrors.description
+                      ? "input input-error"
+                      : "input"
+                  }
                   rows="4"
                   name="description"
                   value={formData.description}
@@ -801,7 +713,7 @@ function ManageCourses() {
 
                 {fieldErrors.description && (
 
-                  <p className="error">
+                  <p className="field-error">
                     {fieldErrors.description}
                   </p>
 
@@ -821,7 +733,7 @@ function ManageCourses() {
               )}
 
 
-              {/* ---------- Buttons ---------- */}
+              {/* ---------- Form Actions ---------- */}
 
               <div className="form-actions">
 
@@ -868,9 +780,7 @@ function ManageCourses() {
         )}
 
 
-        {/* =====================================
-            COURSE TABLE
-        ====================================== */}
+        {/* ---------- Course Table ---------- */}
 
         <section className="section-card">
 
@@ -878,14 +788,11 @@ function ManageCourses() {
           <div className="section-card-header">
 
             <h2>
-
               All Courses
-              {
-                courses.length > 0
-                  ? ` (${courses.length})`
-                  : ""
+              {courses.length > 0
+                ? ` (${courses.length})`
+                : ""
               }
-
             </h2>
 
 
@@ -916,11 +823,9 @@ function ManageCourses() {
             courses.length === 0 && (
 
               <p className="empty">
-
                 No courses yet.
-                Click "Add Course"
-                to create the first one.
-
+                Click "Add Course" to create
+                the first one.
               </p>
 
             )
@@ -994,9 +899,7 @@ function ManageCourses() {
                           <td>
 
                             <span className="tag tag-level">
-
                               {course.level}
-
                             </span>
 
                           </td>
@@ -1058,7 +961,6 @@ function ManageCourses() {
 
                   </tbody>
 
-
                 </table>
 
               </div>
@@ -1075,9 +977,7 @@ function ManageCourses() {
       <Footer />
 
     </>
-
   );
-
 }
 
 
