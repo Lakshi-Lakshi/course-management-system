@@ -20,7 +20,7 @@ function Courses() {
   const [maxPrice, setMaxPrice] = useState("");
 
 
-  // ---------- Load courses from the backend ----------
+  // ---------- Load courses from backend ----------
   useEffect(() => {
 
     const getCourses = async () => {
@@ -29,7 +29,6 @@ function Courses() {
 
         const response = await api.get("/courses");
 
-        // The backend always puts the array inside "courses".
         setCourses(response.data.courses || []);
 
       } catch (error) {
@@ -51,7 +50,7 @@ function Courses() {
   }, []);
 
 
-  // ---------- Build the category list ----------
+  // ---------- Build category list ----------
   const categories = [
     "All",
     ...new Set(
@@ -76,19 +75,23 @@ function Courses() {
 
     const search = searchText.toLowerCase().trim();
 
-    // Safely handle null or undefined values
-    const title = String(course.title ?? "").toLowerCase();
-    const category = String(course.category ?? "").toLowerCase();
-    const level = String(course.level ?? "").toLowerCase();
-    const description = String(
-      course.description ?? ""
-    ).toLowerCase();
-    const duration = String(
-      course.duration ?? ""
-    ).toLowerCase();
+    const title =
+      String(course.title ?? "").toLowerCase();
 
-    // Search in title, category, level,
-    // description and duration
+    const category =
+      String(course.category ?? "").toLowerCase();
+
+    const level =
+      String(course.level ?? "").toLowerCase();
+
+    const description =
+      String(course.description ?? "").toLowerCase();
+
+    const duration =
+      String(course.duration ?? "").toLowerCase();
+
+
+    // ---------- Search ----------
     const matchesSearch =
       search === "" ||
       title.includes(search) ||
@@ -98,21 +101,20 @@ function Courses() {
       duration.includes(search);
 
 
-    // ---------- Category filter ----------
+    // ---------- Category ----------
     const matchesCategory =
       selectedCategory === "All" ||
       course.category === selectedCategory;
 
 
-    // ---------- Level filter ----------
+    // ---------- Level ----------
     const matchesLevel =
       selectedLevel === "All" ||
       course.level === selectedLevel;
 
 
-    // ---------- Price filter ----------
+    // ---------- Price ----------
     const coursePrice = Number(course.price);
-
 
     const matchesMinPrice =
       minPrice === "" ||
@@ -120,7 +122,6 @@ function Courses() {
         !isNaN(coursePrice) &&
         coursePrice >= Number(minPrice)
       );
-
 
     const matchesMaxPrice =
       maxPrice === "" ||
@@ -130,7 +131,6 @@ function Courses() {
       );
 
 
-    // All filters must match
     return (
       matchesSearch &&
       matchesCategory &&
@@ -198,7 +198,7 @@ function Courses() {
 
             <div className="filter-bar">
 
-              {/* ---------- Search ---------- */}
+              {/* Search */}
 
               <input
                 type="text"
@@ -211,7 +211,7 @@ function Courses() {
               />
 
 
-              {/* ---------- Category ---------- */}
+              {/* Category */}
 
               <select
                 className="input"
@@ -235,7 +235,7 @@ function Courses() {
               </select>
 
 
-              {/* ---------- Level ---------- */}
+              {/* Level */}
 
               <select
                 className="input"
@@ -259,7 +259,7 @@ function Courses() {
               </select>
 
 
-              {/* ---------- Minimum Price ---------- */}
+              {/* Minimum Price */}
 
               <input
                 type="number"
@@ -273,7 +273,7 @@ function Courses() {
               />
 
 
-              {/* ---------- Maximum Price ---------- */}
+              {/* Maximum Price */}
 
               <input
                 type="number"
@@ -287,7 +287,7 @@ function Courses() {
               />
 
 
-              {/* ---------- Clear All ---------- */}
+              {/* Clear All */}
 
               <button
                 type="button"
@@ -319,8 +319,6 @@ function Courses() {
               </span>
 
 
-              {/* Search chip */}
-
               {searchText.trim() !== "" && (
 
                 <span className="filter-chip">
@@ -329,8 +327,6 @@ function Courses() {
 
               )}
 
-
-              {/* Category chip */}
 
               {selectedCategory !== "All" && (
 
@@ -341,8 +337,6 @@ function Courses() {
               )}
 
 
-              {/* Level chip */}
-
               {selectedLevel !== "All" && (
 
                 <span className="filter-chip">
@@ -352,8 +346,6 @@ function Courses() {
               )}
 
 
-              {/* Minimum price chip */}
-
               {minPrice !== "" && (
 
                 <span className="filter-chip">
@@ -362,8 +354,6 @@ function Courses() {
 
               )}
 
-
-              {/* Maximum price chip */}
 
               {maxPrice !== "" && (
 
@@ -405,7 +395,7 @@ function Courses() {
 
 
         {/* =========================================
-            No courses exist
+            No courses
            ========================================= */}
 
         {!loading &&
@@ -421,7 +411,7 @@ function Courses() {
 
 
         {/* =========================================
-            Courses exist but no filter match
+            No filter results
            ========================================= */}
 
         {!loading &&
@@ -481,4 +471,3 @@ function Courses() {
 }
 
 export default Courses;
-
